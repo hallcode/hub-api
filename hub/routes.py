@@ -1,4 +1,6 @@
-from hub.resources import base
+from hub.resources import (
+    base,
+)
 
 
 def load_routes(api):

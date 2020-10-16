@@ -3,11 +3,13 @@ Entry point for the Flask app
 """
 
 from flask import Flask
+import sys
 
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from flask_restful import Api
 
+from .config import Config
 from hub.routes import load_routes
 
 
@@ -21,12 +23,12 @@ def create_app():
     """Create Flask app"""
 
     app = Flask(__name__)
+    app.config.from_object(Config)
 
     init_db(app)
 
     load_routes(api)
     load_plugins(app)
-    
 
     return app
 
