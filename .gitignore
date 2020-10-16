@@ -387,3 +387,4 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /hub-api.pyproj
+/hub-api.sln
