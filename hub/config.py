@@ -30,3 +30,6 @@ class Config:
     # AWS Secrets
     AWS_SECRET_KEY = environ.get('AWS_SECRET_KEY')
     AWS_KEY_ID = environ.get('AWS_KEY_ID')
+
+    # Email
+    GLOBAL_FROM_ADDR = environ.get('GLOBAL_FROM_ADDR', 'dev@localhost.test')

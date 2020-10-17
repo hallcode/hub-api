@@ -18,6 +18,5 @@ class BaseApi(Resource):
         """Handle requests to the API root endpoint."""
         return {
             "Api Name": "Hub - Peterborough Tenants' Union",
-            "Version": 0.1,
-            "db_con_string": current_app.config['SQLALCHEMY_DATABASE_URI']
+            "Version": 0.1
         }, 200
