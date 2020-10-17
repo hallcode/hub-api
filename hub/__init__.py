@@ -12,6 +12,8 @@ from flask_restful import Api
 from .config import Config
 from hub.routes import load_routes
 
+from .models import import_all_models
+
 
 # Global Libraries
 db = SQLAlchemy()
@@ -34,10 +36,10 @@ def create_app():
 
 
 def init_db(app):
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = False
+    """Initialise database"""
 
     db.init_app(app)
+    import_all_models()
 
 
 def load_plugins(app):

@@ -9,4 +9,5 @@ def load_routes(api):
     """
 
     # Base API routes
+    api.add_resource(base.RootApi, '/')
     api.add_resource(base.BaseApi, '/api')
