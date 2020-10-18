@@ -1,4 +1,8 @@
+from markdown import markdown
+
 from hub import db
+from hub.models.membership import Subscriber
+from hub.services import email
 
 
 subscr_recipients = db.Table('email_subscribers', 
@@ -26,4 +30,19 @@ class Email(db.Model):
 
 
     def send(self):
-        pass
+        if self.status in ('SENT', 'DRAFT', 'DELETED', 'ARCHIVED'):
+            return
+
+        html = markdown(self.body)
+
+        if self.to_all_subscribers:
+            subs = Subscriber.query.all()
+        else:
+            subs = self.subscribers
+
+        for recipient in subs:
+            email.send_email(recipient=str(recipient),
+                             subject=self.subject,
+                             body_html=html,
+                             body_text=self.body)
+

@@ -16,3 +16,6 @@ class Subscriber(db.Model):
 
     def __repr__(self):
         return '<Subscriber %s>' % self.email
+
+    def __str__(self):
+        return '%s <%s>' % str(self.name).title
