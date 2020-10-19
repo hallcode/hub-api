@@ -5,6 +5,8 @@ import tempfile
 import pytest
 import hub
 
+from flask_restful import Api
+
 
 @pytest.fixture
 def client():
@@ -23,12 +25,14 @@ def client():
     with app.test_client() as client:
         yield client
 
+    hub.api = Api()
+
 
 @pytest.fixture(scope='module')
 def init_database():
     # Create the database and the database table
-    db.create_all()
+    hub.db.create_all()
  
-    yield db  # this is where the testing happens!
+    yield hub.db  # this is where the testing happens!
  
-    db.drop_all()
+    hub.db.drop_all()

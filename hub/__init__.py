@@ -25,10 +25,13 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
-    init_db(app)
+    with app.app_context():
+        init_db(app)
 
-    load_routes(api)
-    load_plugins(app)
+        load_routes(api)
+        create_app.resources_added = True
+
+        load_plugins(app)
 
     return app
 
