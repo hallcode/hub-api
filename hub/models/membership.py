@@ -6,16 +6,18 @@ Models for everything relating to people (users, members, etc)
 from hub import db
 
 
-class Subscriber(db.Model):
+class Person(db.Model):
     """
     A user who has subscribed to the mailing list
     """
 
-    email     = db.Column(db.String(1024), primary_key=True)
-    name      = db.Column(db.String(255), nullable=True)
+    id        = db.Column(db.String(10), primary_key=True)
+    first_name = db.Column(db.String(255), nullable=False)
+    last_name  = db.Column(db.String(255), nullable=False)
+    date_of_birth = db.Column(db.Date, nullable=True)
+
 
     def __repr__(self):
-        return '<Subscriber %s>' % self.email
+        return '<Member %s>' % self.id
 
-    def __str__(self):
-        return '%s <%s>' % str(self.name).title
+    

@@ -1,13 +1,13 @@
 from markdown import markdown
 
 from hub import db
-from hub.models.membership import Subscriber
+from hub.models.membership import Person
 from hub.services import email
 
 
-subscr_recipients = db.Table('email_subscribers', 
+email_recipients = db.Table('email_recipients', 
     db.Column('email_id', db.Integer, db.ForeignKey('email.id'), primary_key=True),
-    db.Column('subscriber', db.String(1024), db.ForeignKey('subscriber.email'), primary_key=True)
+    db.Column('person_id', db.String(10), db.ForeignKey('person.id'), primary_key=True)
 )
 
 
@@ -23,9 +23,8 @@ class Email(db.Model):
     status             = db.Column(db.String(10))
     type               = db.Column(db.String(3), default='STD')
     to_all_members     = db.Column(db.Boolean, default=False)
-    to_all_subscribers = db.Column(db.Boolean, default=False)
 
-    subscribers = db.relationship('Subscriber', secondary=subscr_recipients, lazy='subquery', 
+    recipients = db.relationship('Person', secondary=email_recipients, lazy='subquery', 
                                   backref=db.backref('emails', lazy=True))
 
 
@@ -35,10 +34,10 @@ class Email(db.Model):
 
         html = markdown(self.body)
 
-        if self.to_all_subscribers:
-            subs = Subscriber.query.all()
+        if self.to_all_members:
+            subs = People.query.all()
         else:
-            subs = self.subscribers
+            subs = self.recipients
 
         for recipient in subs:
             email.send_email(recipient=str(recipient),
