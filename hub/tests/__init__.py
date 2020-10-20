@@ -23,7 +23,8 @@ def client():
     )
 
     with app.test_client() as client:
-        yield client
+        with app.app_context():
+            yield client
 
     hub.api = Api()
 

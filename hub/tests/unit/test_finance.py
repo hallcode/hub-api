@@ -39,3 +39,9 @@ def test_active_returns_correct_value(client):
 
     rate.ends_on = future_date
     assert rate.is_active == True
+
+
+def test_bands_return_correct_amounts(client):
+
+    from hub.models.finance import Band, Rate
+

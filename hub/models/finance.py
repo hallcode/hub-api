@@ -16,7 +16,7 @@ class Band(db.Model):
     multiplier  = db.Column(db.Numeric(4,3))
     starts_on   = db.Column(db.Date)
     ends_on     = db.Column(db.Date)
-    rate_id     = db.Column(db.Integer, db.ForeignKey('rate.id'))
+    rate_id     = db.Column(db.Integer, db.ForeignKey('rate.id'), nullable=False)
 
 
     def __init__(self, code, rate_id):
@@ -43,6 +43,9 @@ class Rate(db.Model):
     amount     = db.Column(db.Numeric(5,3), nullable=False)
     multiplier = db.Column(db.Numeric(4,3), nullable=False, default=0)
     charge     = db.Column(db.Numeric(5,3), nullable=False, default=0)
+    role_type_id    = db.Column(db.Integer, db.ForeignKey('role_type.id'), nullable=False)
+
+    bands = db.relationship(Band, backref='rate', lazy=True)
 
 
     def __init__(self, amount, starts_on):
