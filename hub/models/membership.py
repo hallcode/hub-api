@@ -67,14 +67,13 @@ class RoleType(db.Model):
     id            = db.Column(db.Integer, primary_key=True)
     title         = db.Column(db.String(255), unique=True, nullable=False)
     expires_after = db.Column(db.Integer, nullable=True) # Months
-    lapse_after   = db.Column(db.Integer, nullable=True) # Multiples of expires_after
     auto_renews   = db.Column(db.Boolean, default=False)
     available     = db.Column(db.Boolean, default=True)
     category      = db.Column(db.String(255), nullable=True)
     description   = db.Column(db.Text, nullable=True)
     joinable      = db.Column(db.Boolean, nullable=False, default=False)
 
-    rates = db.relationship('Rate', backref='role', lazy=True)
+    rates = db.relationship('Rate', backref='role_type', lazy=True)
 
 
     def __init__(self, title, expires_after=None, lapse_after=None, auto_renews=False):
@@ -90,7 +89,7 @@ class RoleType(db.Model):
             self.auto_renews = True
 
     @property
-    def requires_payment(self):
+    def chargable(self):
         if self.rates is None:
             return False
 
@@ -103,6 +102,8 @@ class Role(db.Model):
     """
 
     person_id = db.Column(db.String(10), db.ForeignKey('person.id'), primary_key=True)
-    role_id   = db.Column(db.Integer, primary_key=True)
+    role_id   = db.Column(db.Integer, db.ForeignKey('role_type.id'), primary_key=True)
     starts_on = db.Column(db.Date, nullable=False, primary_key=True)
     ends_on   = db.Column(db.Date, nullable=True)
+    
+    type = db.relationship('RoleType', backref='role', lazy=True)
