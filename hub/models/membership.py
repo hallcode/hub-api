@@ -1,7 +1,6 @@
 """
 Models for everything relating to people (users, members, etc)
 """
-from math import floor
 import datetime
 from string import ascii_uppercase
 
@@ -56,7 +55,6 @@ class Person(db.Model):
         ).count()
 
         self.id = '{:s}{:s}{:03d}'.format(month, today.strftime('%y'), count+1)
-
 
     
 class RoleType(db.Model):
