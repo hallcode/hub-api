@@ -65,3 +65,16 @@ class Rate(db.Model):
             return True
 
         return False
+
+
+class Payment(db.Model):
+    """
+    Log table for all payments collected
+    """
+
+    id        = db.Column(db.Integer, primary_key=True)
+    timestamp = db.Column(db.DateTime, nullable=False)
+    person_id = db.Column(db.String(10), db.ForeignKey('person.id'), nullable=False)
+    amount    = db.Column(db.Numeric(5,3), nullable=False, default=0)
+    status    = db.Column(db.String(5), nullable=False, default='OK')
+    

@@ -17,6 +17,9 @@ class Person(db.Model):
     last_name     = db.Column(db.String(255), nullable=False)
     date_of_birth = db.Column(db.Date, nullable=True)
 
+    stripe_customer_id = db.Column(db.String(255), nullable=True)
+    stripe_payment_id  = db.Column(db.String(255), nullable=True)
+
 
     def __init__(self, first_name, last_name):
         self.first_name = first_name.title()
@@ -99,9 +102,10 @@ class Role(db.Model):
     Roles people actually hold
     """
 
-    person_id = db.Column(db.String(10), db.ForeignKey('person.id'), primary_key=True)
-    role_id   = db.Column(db.Integer, db.ForeignKey('role_type.id'), primary_key=True)
-    starts_on = db.Column(db.Date, nullable=False, primary_key=True)
-    ends_on   = db.Column(db.Date, nullable=True)
+    person_id  = db.Column(db.String(10), db.ForeignKey('person.id'), primary_key=True)
+    role_id    = db.Column(db.Integer, db.ForeignKey('role_type.id'), primary_key=True)
+    starts_on  = db.Column(db.Date, nullable=False, primary_key=True)
+    ends_on    = db.Column(db.Date, nullable=True)
+    payment_id = db.Column(db.Integer, db.ForeignKey('payment.id'), nullable=True)
     
     type = db.relationship('RoleType', backref='role', lazy=True)
