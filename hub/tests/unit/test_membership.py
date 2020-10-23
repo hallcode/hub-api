@@ -3,11 +3,10 @@ import random
 from datetime import timedelta
 from string import ascii_uppercase
 
-from hub import db
-from hub.tests import client
+from hub.tests import client, db
 
 
-def test_person_returns_correct_names(client):
+def test_person_returns_correct_names(client, db):
 
     from hub.models.membership import Person
 
@@ -18,7 +17,7 @@ def test_person_returns_correct_names(client):
     assert person.full_name == 'Billy Thefish'
 
 
-def test_person_id_returns_correctly(client):
+def test_person_id_returns_correctly(client, db):
 
     from hub.models.membership import Person
 
@@ -32,7 +31,7 @@ def test_person_id_returns_correctly(client):
     assert int(person.id[3:]) > 0
 
 
-def test_age_returns_correctly(client):
+def test_age_returns_correctly(client, db):
 
     from hub.models.membership import Person
 
@@ -53,7 +52,7 @@ def test_age_returns_correctly(client):
     assert person.get_age() == 18
 
 
-def test_add_role_to_person(client):
+def test_add_role_to_person(client, db):
     
     from hub.models.membership import Person, Role, RoleType
 
@@ -72,3 +71,35 @@ def test_add_role_to_person(client):
     assert role.person_id    == person.id
     assert role.ends_on      == datetime.date(2000,3,12)
     assert len(person.roles) == 1
+
+
+def test_primary_email(client, db):
+
+    from hub.models.membership import Person, Address
+
+    person = Person('billy', 'nomates')
+    person.date_of_birth = datetime.date(1990,10,11)
+    db.session.add(person)
+
+    email = Address(person, 'EMAIL', 'PRIMARY', 'email@local.test')
+    db.session.add(email)
+
+    db.session.commit()
+
+    assert person.primary_email == 'email@local.test'
+
+
+def test_sms_number(client, db):
+
+    from hub.models.membership import Person, Address
+
+    person = Person('billy', 'nomates')
+    person.date_of_birth = datetime.date(1990,10,11)
+    db.session.add(person)
+
+    sms = Address(person, 'TEL', 'SMS', '07712345690')
+    db.session.add(sms)
+
+    db.session.commit()
+
+    assert person.sms_number == '07712345690'

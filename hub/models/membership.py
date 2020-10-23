@@ -7,6 +7,7 @@ from string import ascii_uppercase
 
 from hub import db
 from hub.services.time import months_to_days
+from hub.services.geo import post_code_check
 
 
 class Person(db.Model):
@@ -14,14 +15,19 @@ class Person(db.Model):
     A user who has subscribed to the mailing list
     """
 
-    id            = db.Column(db.String(10), primary_key=True)
-    first_name    = db.Column(db.String(255), nullable=False)
-    last_name     = db.Column(db.String(255), nullable=False)
-    date_of_birth = db.Column(db.Date, nullable=True)
-    created_at    = db.Column(db.DateTime)
+    id              = db.Column(db.String(10), primary_key=True)
+    first_name      = db.Column(db.String(255), nullable=False)
+    last_name       = db.Column(db.String(255), nullable=False)
+    date_of_birth   = db.Column(db.Date, nullable=True)
+    created_at      = db.Column(db.DateTime)
+    ward_id         = db.Column(db.String(10), nullable=True)
+    district_id     = db.Column(db.String(10), nullable=True)
+    constituency_id = db.Column(db.String(10), nullable=True)
 
     stripe_customer_id = db.Column(db.String(255), nullable=True)
     stripe_payment_id  = db.Column(db.String(255), nullable=True)
+
+    password = db.Column(db.String(300), nullable=True)
 
     addresses = db.relationship('Address', backref='person', lazy=False)
     roles     = db.relationship('Role', backref='person', lazy=False)
@@ -56,6 +62,33 @@ class Person(db.Model):
         else:
             return age - 1
 
+    @property
+    def is_eligable(self):
+        if self.age < 16:
+            return False, "Members must be over the age of 16."
+
+    @property
+    def primary_email(self):
+        return Address.query.get((self.id, 'EMAIL', 'PRIMARY')).line_1
+
+    @property
+    def sms_number(self):
+        return Address.query.get((self.id, 'TEL', 'SMS')).line_1
+
+    def set_locale(self, post_code):
+        try:
+            codes = post_code_check(post_code)
+        except Exception:
+            return
+
+        if codes is None:
+            return
+
+        self.ward_id         = codes['admin_ward']
+        self.district_id     = codes['admin_district']
+        self.constituency_id = codes['parliamentary_constituency']
+        
+
     def set_id(self):
         today = datetime.date.today()
 
@@ -71,17 +104,34 @@ class Address(db.Model):
     """
     Addresses
     """
+
+    TYPES = {
+        "ADDR": ('HOME','BILLING','POST'),
+        "EMAIL": ('PRIMARY','BACKUP'),
+        "TEL": ('SMS','LANDLINE')
+    }
     
     person_id = db.Column(db.String(10), db.ForeignKey('person.id'), primary_key=True)
     type      = db.Column(db.String(10), primary_key=True)
-    usage     = db.Column(db.String(10), nullable=False)
+    usage     = db.Column(db.String(10), primary_key=True)
     verified  = db.Column(db.Boolean, nullable=False, default=False)
     line_1    = db.Column(db.String(1024))
     district  = db.Column(db.String(1024))
     city      = db.Column(db.String(1024))
     post_code = db.Column(db.String(10))
 
+    def __init__(self, person, type, usage, line_1):
+        if type not in self.TYPES:
+            raise Exception
+        self.type = type
+        if usage not in self.TYPES[type]:
+            raise Exception
+        self.usage = usage
+
+        self.person = person
+        self.line_1 = line_1
     
+
 class RoleType(db.Model):
     """
     Types of roles available for people to have

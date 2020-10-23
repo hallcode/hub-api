@@ -3,10 +3,10 @@ Tests for the Rate model
 """
 from datetime import datetime, timedelta
 
-from hub.tests import client
+from hub.tests import client, db
 
 
-def test_get_amounts_return_correct_value(client):
+def test_get_amounts_return_correct_value(client, db):
 
     from hub.models.finance import Rate
 
@@ -19,7 +19,7 @@ def test_get_amounts_return_correct_value(client):
     assert rate.amount     == 10
 
 
-def test_active_returns_correct_value(client):
+def test_active_returns_correct_value(client, db):
     
     from hub.models.finance import Rate
 
@@ -40,8 +40,22 @@ def test_active_returns_correct_value(client):
     rate.ends_on = future_date
     assert rate.is_active == True
 
+    assert len(rate.bands) == 0
 
-def test_bands_return_correct_amounts(client):
+
+def test_bands_return_correct_amounts(client, db):
 
     from hub.models.finance import Band, Rate
 
+    rate = Rate(10,datetime.today())
+    rate.multiplier = 0.5
+    rate.charge     = 1.25
+    db.session.add(rate)
+
+    band            = Band('STD', rate)
+    band.starts_on  = datetime.today()
+    band.multiplier = 0.75
+    db.session.add(band)
+
+    assert band.net_amount == 5
+    assert len(rate.bands) == 1

@@ -16,6 +16,7 @@ _mailinglist
 docs/_build/
 .vscode
 http.ini
+*.db
 
 # Coverage reports
 htmlcov/

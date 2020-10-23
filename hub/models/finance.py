@@ -18,9 +18,9 @@ class Band(db.Model):
     ends_on     = db.Column(db.Date)
     rate_id     = db.Column(db.Integer, db.ForeignKey('rate.id'), nullable=False)
 
-    def __init__(self, code, rate_id):
+    def __init__(self, code, rate):
         self.code    = str(code).upper()
-        self.rate_id = rate_id
+        self.rate    = rate
 
     @property
     def is_active(self):
@@ -31,6 +31,10 @@ class Band(db.Model):
             return True
 
         return False
+
+    @property
+    def net_amount(self):
+        return ( (self.rate.amount * self.multiplier) * self.rate.multiplier ) + self.rate.charge
 
 
 class Rate(db.Model):
