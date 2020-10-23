@@ -1,7 +1,9 @@
 import datetime
+import random
 from datetime import timedelta
 from string import ascii_uppercase
 
+from hub import db
 from hub.tests import client
 
 
@@ -49,3 +51,24 @@ def test_age_returns_correctly(client):
 
     person.date_of_birth = datetime.date.today() - timedelta(weeks=950)
     assert person.get_age() == 18
+
+
+def test_add_role_to_person(client):
+    
+    from hub.models.membership import Person, Role, RoleType
+
+    person = Person('billy', 'nomates')
+    person.date_of_birth = datetime.date(1990,10,11)
+    db.session.add(person)
+
+    role_type = RoleType("Role{:d}".format(random.randrange(0,99)), 1, True)
+    db.session.add(role_type)
+
+    role = Role(person, role_type, starts_on=datetime.date(2000,2,12))
+    db.session.add(role)
+
+    db.session.commit()
+
+    assert role.person_id    == person.id
+    assert role.ends_on      == datetime.date(2000,3,12)
+    assert len(person.roles) == 1

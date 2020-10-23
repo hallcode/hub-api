@@ -18,7 +18,6 @@ class Band(db.Model):
     ends_on     = db.Column(db.Date)
     rate_id     = db.Column(db.Integer, db.ForeignKey('rate.id'), nullable=False)
 
-
     def __init__(self, code, rate_id):
         self.code    = str(code).upper()
         self.rate_id = rate_id
@@ -37,16 +36,15 @@ class Band(db.Model):
 class Rate(db.Model):
     """Base membership rates from which bands are calculated"""
 
-    id         = db.Column(db.Integer, primary_key=True)
-    starts_on  = db.Column(db.Date, nullable=False)
-    ends_on    = db.Column(db.Date)
-    amount     = db.Column(db.Numeric(5,3), nullable=False)
-    multiplier = db.Column(db.Numeric(4,3), nullable=False, default=0)
-    charge     = db.Column(db.Numeric(5,3), nullable=False, default=0)
-    role_type_id    = db.Column(db.Integer, db.ForeignKey('role_type.id'), nullable=False)
+    id           = db.Column(db.Integer, primary_key=True)
+    starts_on    = db.Column(db.Date, nullable=False)
+    ends_on      = db.Column(db.Date)
+    amount       = db.Column(db.Numeric(5,3), nullable=False)
+    multiplier   = db.Column(db.Numeric(4,3), nullable=False, default=0)
+    charge       = db.Column(db.Numeric(5,3), nullable=False, default=0)
+    role_type_id = db.Column(db.Integer, db.ForeignKey('role_type.id'), nullable=False)
 
     bands = db.relationship(Band, backref='rate', lazy=True)
-
 
     def __init__(self, amount, starts_on):
         self.amount    = amount
@@ -76,5 +74,8 @@ class Payment(db.Model):
     timestamp = db.Column(db.DateTime, nullable=False)
     person_id = db.Column(db.String(10), db.ForeignKey('person.id'), nullable=False)
     amount    = db.Column(db.Numeric(5,3), nullable=False, default=0)
-    status    = db.Column(db.String(5), nullable=False, default='OK')
+    status    = db.Column(db.String(7), nullable=False, default='OK')
+
+    def collect(self):
+        pass
     

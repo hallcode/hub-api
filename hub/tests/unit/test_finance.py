@@ -16,7 +16,7 @@ def test_get_amounts_return_correct_value(client):
     rate.charge     = 1.25
 
     assert rate.net_amount == 6.25
-    assert rate.amount           == 10
+    assert rate.amount     == 10
 
 
 def test_active_returns_correct_value(client):

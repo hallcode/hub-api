@@ -27,13 +27,3 @@ def client():
             yield client
 
     hub.api = Api()
-
-
-@pytest.fixture(scope='module')
-def init_database():
-    # Create the database and the database table
-    hub.db.create_all()
- 
-    yield hub.db  # this is where the testing happens!
- 
-    hub.db.drop_all()
