@@ -47,6 +47,10 @@ class Person(db.Model):
     def full_name(self):
         return '{:s} {:s}'.format(self.first_name.title(), self.last_name.title())
 
+    @property
+    def legal_name(self):
+        return '{:s}, {:s}'.format(self.last_name.upper(), self.first_name)
+
     def get_age(self, on=datetime.date.today()):
         age  = on.year  - self.date_of_birth.year
 
@@ -75,11 +79,15 @@ class Person(db.Model):
     def sms_number(self):
         return Address.query.get((self.id, 'TEL', 'SMS')).line_1
 
-    def set_locale(self, post_code):
-        try:
-            codes = post_code_check(post_code)
-        except Exception:
-            return
+    def get_address(self, type='HOME'):
+        return Address.query.get((self.id, 'ADDR', type))
+
+    def set_locale(self):
+        addr = self.get_address()
+        if addr is None:
+            return 
+
+        codes = post_code_check(addr.post_code)
 
         if codes is None:
             return
@@ -87,7 +95,6 @@ class Person(db.Model):
         self.ward_id         = codes['admin_ward']
         self.district_id     = codes['admin_district']
         self.constituency_id = codes['parliamentary_constituency']
-        
 
     def set_id(self):
         today = datetime.date.today()

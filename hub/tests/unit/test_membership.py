@@ -15,6 +15,7 @@ def test_person_returns_correct_names(client, db):
 
     person.last_name = 'thefish'
     assert person.full_name == 'Billy Thefish'
+    assert person.legal_name == 'THEFISH, Billy'
 
 
 def test_person_id_returns_correctly(client, db):
@@ -103,3 +104,49 @@ def test_sms_number(client, db):
     db.session.commit()
 
     assert person.sms_number == '07712345690'
+
+
+def test_get_address(client, db):
+
+    from hub.models.membership import Person, Address
+
+    person = Person('billy', 'nomates')
+    person.date_of_birth = datetime.date(1990,10,11)
+    db.session.add(person)
+
+    addr1 = Address(person, 'ADDR', 'HOME', '11 Anystreet')
+    addr1.district  = 'District'
+    addr1.city      = 'Anytown'
+    addr1.post_code = 'PE7 8JY'
+    db.session.add(addr1)
+
+    db.session.commit()
+
+    assert len(person.addresses) == 1
+    assert person.get_address().line_1 == '11 Anystreet'
+    assert person.get_address().post_code == 'PE7 8JY'
+    assert person.get_address('POST') is None 
+
+
+def test_post_code_check(client, db):
+
+    from hub.models.membership import Person, Address
+
+    person = Person('billy', 'nomates')
+    person.date_of_birth = datetime.date(1990,10,11)
+    db.session.add(person)
+
+    addr1 = Address(person, 'ADDR', 'HOME', '11 Anystreet')
+    addr1.district  = 'District'
+    addr1.city      = 'Anytown'
+    addr1.post_code = 'PE7 8JY'
+    db.session.add(addr1)
+
+    db.session.commit()
+
+    person.set_locale()
+    db.session.commit()
+
+    assert person.district_id == 'E06000031'
+    assert person.constituency_id == 'E14000855'
+    assert person.ward_id == 'E05010815'

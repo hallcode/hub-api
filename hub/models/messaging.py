@@ -15,7 +15,7 @@ class Email(db.Model):
     
     id                 = db.Column(db.Integer, primary_key=True)
     subject            = db.Column(db.String(1024))
-    from_user_id       = db.Column(db.String(10))
+    from_person_id     = db.Column(db.String(10), db.ForeignKey('person.id'))
     created_at         = db.Column(db.DateTime)
     body               = db.Column(db.Text)
     sent_at            = db.Column(db.DateTime, nullable=True)
@@ -25,8 +25,15 @@ class Email(db.Model):
     to_all_members     = db.Column(db.Boolean, default=False)
 
     recipients = db.relationship('Person', secondary=email_recipients, lazy='subquery', 
-                                  backref=db.backref('emails', lazy=True))
+                                  backref=db.backref('emails_received', lazy=True))
 
+    sender = db.relationship('Person', backref=db.backref('emails_sent', lazy=True), lazy=True)
+
+    def __init__(self, sender, subject, body):
+        self.status = 'CREATED'
+        self.sender = sender
+        self.subject = subject
+        self.body    = body
 
     def send(self):
         if self.status in ('SENT', 'DRAFT', 'DELETED', 'ARCHIVED'):
@@ -40,7 +47,7 @@ class Email(db.Model):
             subs = self.recipients
 
         for recipient in subs:
-            email.send_email(recipient=str(recipient),
+            email.send_email(recipient=recipient.primary_email,
                              subject=self.subject,
                              body_html=html,
                              body_text=self.body)

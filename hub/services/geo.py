@@ -3,7 +3,7 @@ import urllib
 
 
 def post_code_check(post_code):
-    pc = urllib.parse.quote(post_Code)
+    pc = urllib.parse.quote(post_code)
     r = requests.get('https://api.postcodes.io/postcodes/{:s}'.format(pc))
 
     if r.status_code == 404:
@@ -12,5 +12,6 @@ def post_code_check(post_code):
     if r.status_code != 200:
         raise Exception
 
-    return r.json()['codes']
+    json = r.json()
+    return json['result']['codes']
     
