@@ -27,9 +27,6 @@ class Config:
     SQLALCHEMY_COMMIT_ON_TEARDOWN  = environ.get('SQLALCHEMY_COMMIT_ON_TEARDOWN', False)
     DATABASE_CONNECT_OPTIONS       = {}
 
-    # AWS Secrets
-    AWS_SECRET_KEY = environ.get('AWS_SECRET_KEY')
-    AWS_KEY_ID = environ.get('AWS_KEY_ID')
-
     # Email
     GLOBAL_FROM_ADDR = environ.get('GLOBAL_FROM_ADDR', 'dev@localhost.test')
+    TEMPLATE_PATH    = environ.get('TEMPLATE_PATH', 'hub/templates')

@@ -1,13 +1,24 @@
 from flask import current_app as app
 
-import boto3
+import boto3, os
 from botocore.exceptions import ClientError
 
 
-def send_email(recipient, subject, body_html, body_text):
+def get_email_template(name):
+    path = app.config['TEMPLATE_PATH']
+    path = os.path.join(path, 'email', name)
+
+    with open(path, 'r') as file:
+        return file.read()
+
+
+def send_email(recipient, subject, body_html, body_text, sender_name=None):
     AWS_REGION = "eu-west-1"
     CHARSET = "UTF-8"
     client = boto3.client('ses', region_name=AWS_REGION)
+
+    if sender_name is None:
+        sender_name = 'Peterborough Tenants\'s Union'
 
     # Try to send the email.
     try:
@@ -34,7 +45,7 @@ def send_email(recipient, subject, body_html, body_text):
                     'Data': subject,
                 },
             },
-            Source=app.config['GLOBAL_FROM_ADDR'],
+            Source='{:s} <{:s}>'.format(sender_name, app.config['GLOBAL_FROM_ADDR']),
         )
     except ClientError as e:
         return False
