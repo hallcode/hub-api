@@ -15,6 +15,9 @@ class VerifyApi(Resource):
 
         if addr is None:
             return {}, 404
+
+        if addr.type != 'EMAIL':
+            return {}, 404
         
         if addr.verified:
             return {}, 204
@@ -36,6 +39,9 @@ class VerifyApi(Resource):
         addr = Address.query.filter(Address.line_1==address_text).first()
 
         if addr is None:
+            return {}, 404
+
+        if addr.type != 'EMAIL':
             return {}, 404
         
         if addr.verified:

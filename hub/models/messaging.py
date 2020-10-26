@@ -1,5 +1,5 @@
 from markdown import markdown
-import chevron
+import chevron, datetime
 
 from hub.exts import db
 from hub.models.membership import Person
@@ -35,10 +35,11 @@ class Email(db.Model):
     sender = db.relationship('Person', backref=db.backref('emails_sent', lazy=True), lazy=True)
 
     def __init__(self, sender, subject, body):
-        self.status  = 'CREATED'
-        self.sender  = sender
-        self.subject = subject
-        self.body    = body
+        self.status     = 'CREATED'
+        self.sender     = sender
+        self.subject    = subject
+        self.body       = body
+        self.created_at = datetime.datetime.now()
 
     def get_text(self, to, extra_data=None):
         sender = self.sender
