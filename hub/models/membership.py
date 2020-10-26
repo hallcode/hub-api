@@ -1,11 +1,11 @@
 """
 Models for everything relating to people (users, members, etc)
 """
-import datetime, calendar
+import datetime, calendar, hashlib
 from math import floor
 from string import ascii_uppercase
 
-from hub import db
+from hub.exts import db
 from hub.services.time import months_to_days
 from hub.services.geo import post_code_check
 
@@ -137,7 +137,15 @@ class Address(db.Model):
 
         self.person = person
         self.line_1 = line_1
-    
+        
+
+class VerifyToken(db.Model):
+    token = db.Column(db.String(300), primary_key=True)
+
+    def __init__(self, user_id, code):
+        raw_token = user_id+str(code)
+        self.token = hashlib.sha512(raw_token.encode('UTF-8')).hexdigest()
+
 
 class RoleType(db.Model):
     """

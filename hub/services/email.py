@@ -3,6 +3,8 @@ from flask import current_app as app
 import boto3, os
 from botocore.exceptions import ClientError
 
+from hub.exts import db
+
 
 def get_email_template(name):
     path = app.config['TEMPLATE_PATH']
@@ -51,3 +53,5 @@ def send_email(recipient, subject, body_html, body_text, sender_name=None):
         return False
     else:
         return response
+
+

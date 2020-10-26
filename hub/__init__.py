@@ -2,21 +2,14 @@
 Entry point for the Flask app
 """
 
-# Framework imports
+# Framework import
 from flask import Flask
-from flask_migrate import Migrate
-from flask_sqlalchemy import SQLAlchemy
-from flask_restful import Api
 
 # App imports
 from .config import Config
 from hub.routes import load_routes
 from .models import import_all_models
-
-# Create global Libraries
-db = SQLAlchemy()
-migrate = Migrate()
-api = Api()
+from .exts import db, migrate, api
 
 
 def create_app():

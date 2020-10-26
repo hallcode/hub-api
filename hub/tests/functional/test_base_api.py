@@ -1,7 +1,7 @@
-from hub.tests import client
+from hub.tests import client, db
 
 
-def test_root(client):
+def test_root(client, db):
     """
     GIVEN the app is running
     WHEN GET '/'
@@ -14,7 +14,7 @@ def test_root(client):
     assert response.data == b''
 
 
-def test_api_root(client):
+def test_api_root(client, db):
     """
     GIVEN the app is running
     WHEN GET '/api'

@@ -150,3 +150,4 @@ def test_post_code_check(client, db):
     assert person.district_id == 'E06000031'
     assert person.constituency_id == 'E14000855'
     assert person.ward_id == 'E05010815'
+

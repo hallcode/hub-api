@@ -1,7 +1,7 @@
 from markdown import markdown
 import chevron
 
-from hub import db
+from hub.exts import db
 from hub.models.membership import Person
 from hub.services import email
 
@@ -84,7 +84,7 @@ class Email(db.Model):
                 subject     = self.subject,
                 body_html   = self.get_html(recipient),
                 body_text   = self.body,
-                sender_name = '"{:s} (PeTU)"'.format(self.sender.legal_name)
+                sender_name = '"{:s} (PeTU)"'.format(self.sender.full_name)
             )
 
         self.status = 'SENT'

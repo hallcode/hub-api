@@ -3,7 +3,7 @@ Models for payments etc
 """
 
 from datetime import datetime
-from hub import db
+from hub.exts import db
 
 
 class Band(db.Model):

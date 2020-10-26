@@ -12,17 +12,12 @@ def test_email_send(client, db):
     db.session.add(person)
     db.session.add(addr1)
 
-    alex = Person('alex', 'hall')
-    addr2 = Address(alex, 'EMAIL', 'PRIMARY', 'alexhall93@me.com')
-    db.session.add(alex)
-    db.session.add(addr2)
-
     db.session.commit()
 
     email = Email(
         sender=person,
         subject='Test Message',
-        body="""Dear {{{{ to.first_name }}}} {{{{ to.last_name }}}},
+        body=f"""Dear {{{{ to.first_name }}}} {{{{ to.last_name }}}},
 
 ## This is a test message
 

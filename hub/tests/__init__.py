@@ -4,6 +4,7 @@ import tempfile
 
 import pytest
 import hub
+from hub.exts import db as database
 
 from flask_restful import Api
 
@@ -34,9 +35,8 @@ def client():
 def db():
     """Init test database"""
 
-    db = hub.db
-    db.create_all()
+    database.create_all()
 
-    yield db
+    yield database
 
-    db.drop_all()
+    database.drop_all()
