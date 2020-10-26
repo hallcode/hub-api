@@ -59,7 +59,7 @@ def _send_email(recipient, subject, body_html, body_text, sender_name=None):
 try:
     from uwsgidecorators import *
 
-    @spool
+    @spool(pass_arguments=True)
     def send_email(*args, **kwargs):
         _send_email(*args, **kwargs)
 

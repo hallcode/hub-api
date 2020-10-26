@@ -40,7 +40,32 @@ class Email(db.Model):
         self.subject = subject
         self.body    = body
 
-    def get_html(self, to):
+    def get_text(self, to, extra_data=None):
+        sender = self.sender
+        if sender is None:
+            sender = Person('Peterborough Tenants', 'Union')
+
+        data = {
+            'email': self.__dict__,
+            'to': to.__dict__,
+            'from': sender.__dict__
+        }
+
+        if extra_data is not None:
+            data = {
+                **data,
+                **extra_data
+            }
+
+        text = chevron.render(
+            template=self.body, 
+            data=data
+        )
+
+        return text
+
+
+    def get_html(self, to, extra_data=None):
         template = email.get_email_template('base.html.mustache')
 
         sender = self.sender
@@ -52,6 +77,12 @@ class Email(db.Model):
             'to': to.__dict__,
             'from': sender.__dict__
         }
+
+        if extra_data is not None:
+            data = {
+                **data,
+                **extra_data
+            }
 
         html = chevron.render(
             template=self.body, 
@@ -91,7 +122,7 @@ class Email(db.Model):
                 recipient   = recipient.primary_email,
                 subject     = self.subject,
                 body_html   = self.get_html(recipient),
-                body_text   = self.body,
+                body_text   = self.get_text(recipient),
                 sender_name = '"{:s} (PeTU)"'.format(sender.full_name)
             )
 
