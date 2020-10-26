@@ -25,7 +25,7 @@ class VerifyApi(Resource):
         db.session.add(token)
         db.session.commit()
         
-        self.send_verification_email(addr, code)
+        self._send_verification_email(addr, code)
 
         return {
             "code": code
@@ -33,7 +33,7 @@ class VerifyApi(Resource):
 
 
     def post(self, address_text):
-        addr = Address.query.filter(Address.line_1==address_text)
+        addr = Address.query.filter(Address.line_1==address_text).first()
 
         if addr is None:
             return {}, 404
@@ -42,20 +42,25 @@ class VerifyApi(Resource):
             return {}, 204
         
         data = request.get_json()
-        code = json["code"]
 
-        raw_token = user_id+str(code)
+        if data is None:
+            return {}, 400
+
+        code = data["code"]
+
+        raw_token = address_text+str(code)
         token = hashlib.sha512(raw_token.encode('UTF-8')).hexdigest()
         
-        if VerifyToken.query.get(token) is not None:
-            addr.verified = True
-        
+        if VerifyToken.query.get(token) is None:
+            return {}, 400
+            
+        addr.verified = True
         db.session.commit()
 
         return {}, 204
 
 
-    def send_verification_email(self, address, code):
+    def _send_verification_email(self, address, code):
         if address.verified:
             return
 

@@ -17,6 +17,8 @@
         /* RESET STYLES */
         img { border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
         table { border-collapse: collapse !important; }
+        td, th { padding: 5px, border: 1px solid #cccccc; }
+        table.no-border th, table.no-border td { border: none }
         body { height: 100% !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
 
         /* iOS BLUE LINKS */
@@ -51,7 +53,7 @@
 
         /* These rules set the link and hover states, making it clear that links are, in fact, links. */
         /* Embrace established conventions like underlines on links to keep emails accessible. */
-        a { color: #B200FD; font-weight: 600; text-decoration: underline; }
+        a { color: #f74856; font-weight: 600; text-decoration: underline; }
         a:hover { color: #000000 !important; text-decoration: none !important; }
 
         /* These rules adjust styles for desktop devices, keeping the email responsive for users. */
@@ -83,9 +85,22 @@
         
         <!-- Logo section and header. Headers are useful landmark elements. -->
         <header>
-            <p class="intro" style="margin: 0; color: #000000; font-size: 15px; font-weight: 400; float: right;">
-                {{ to.id }}
-            </p>
+            <table style="width: 98%; min-width: 98vw">
+                <tbody>
+                <tr>
+                    <td style="padding-right: 100px">
+                        <p class="intro" style="margin: 0; color: #000000; font-size: 15px; font-weight: 400;">
+                            Peterborough Tenants' Union
+                        </p>
+                    </td>
+                    <td>
+                        <p class="intro" style="margin: 0; color: #000000; font-size: 15px; font-weight: 400; text-align: right">
+                            {{ to.id }}
+                        </p>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
             {{#email.title}}
             <!-- The h1 is the main heading of the document and should come first. -->
             <!-- We can override the default styles inline. -->
@@ -103,7 +118,7 @@
             {{#email.link}}
             <!-- This link uses descriptive text to inform the user what will happen with the link is tapped. -->
             <!-- It also uses inline styles since some email clients won't render embedded styles from the head. -->
-            <a href="{{email.link}}" style="color: #B200FD; text-decoration: underline;">{{email.link_text}}</a>
+            <a href="{{email.link}}" style="font-size: 19px; color: #f74856; text-decoration: underline;">{{email.link_text}}</a>
             {{/email.link}}
 
             <p>
@@ -114,15 +129,16 @@
         </main>
 
         <!-- Footer information. Footer is a useful landmark element. -->
-        <footer style="color: #cccccc">
+        <footer style="color: #9c9c9c">
             <!-- This link uses descriptive text to inform the user what will happen with the link is tapped. -->
             <!-- It also uses inline styles since some email clients won't render embedded styles from the head. -->
-            <p style="font-size: 16px; font-weight: 400; line-height: 24px; margin-top: 48px;">
-                You received this email because you are a member of the Peterborough Tenants' Union. Don't worry, <a href="https://litmus.com/community" style="color: #B200FD; text-decoration: underline;">you can unsubscribe here</a>.
+            <p style="font-size: 12px; font-weight: 400; line-height: 24px; margin-top: 48px;">
+                You received this email because you are a member of the Peterborough Tenants' Union, or you have opted to recieve emails from us. If you no longer wish to recieve these emails <a href="https://litmus.com/community" style="color: #f74856; text-decoration: underline;">you can unsubscribe here</a>.
+                If you are a member, there are some emails you will always recieve.
             </p>
     
             <!-- The address element does exactly what it says. By default, it is block-level and italicizes text. You can override this behavior inline. -->
-            <address style="font-size: 16px; font-style: normal; font-weight: 400; line-height: 24px;">
+            <address style="font-size: 12px; font-style: normal; font-weight: 400; line-height: 24px;">
                 <strong>Promoted by:</strong> Peterborough Tenants' Union, 11 Kennedy Street, Peterborough, PE7 8JY.
             </address>
         </footer>

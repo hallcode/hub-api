@@ -14,7 +14,7 @@ def get_email_template(name):
         return file.read()
 
 
-def send_email(recipient, subject, body_html, body_text, sender_name=None):
+def _send_email(recipient, subject, body_html, body_text, sender_name=None):
     AWS_REGION = "eu-west-1"
     CHARSET = "UTF-8"
     client = boto3.client('ses', region_name=AWS_REGION)
@@ -55,3 +55,14 @@ def send_email(recipient, subject, body_html, body_text, sender_name=None):
         return response
 
 
+# Wrap send email function so it will run async when server is running under uWSGI.
+try:
+    from uwsgidecorators import *
+
+    @spool
+    def send_email(*args, **kwargs):
+        _send_email(*args, **kwargs)
+
+except ImportError as error:
+    def send_email(*args, **kwargs):
+        _send_email(*args, **kwargs)

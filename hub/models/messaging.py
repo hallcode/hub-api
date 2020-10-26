@@ -43,10 +43,14 @@ class Email(db.Model):
     def get_html(self, to):
         template = email.get_email_template('base.html.mustache')
 
+        sender = self.sender
+        if sender is None:
+            sender = Person('Peterborough Tenants', 'Union')
+
         data = {
             'email': self.__dict__,
             'to': to.__dict__,
-            'from': self.sender.__dict__
+            'from': sender.__dict__
         }
 
         html = chevron.render(
@@ -75,6 +79,10 @@ class Email(db.Model):
         else:
             subs = self.recipients
 
+        sender = self.sender
+        if sender is None:
+            sender = Person('Peterborough Tenants', 'Union')
+
         for recipient in subs:
             if recipient.primary_email is None:
                 continue
@@ -84,7 +92,7 @@ class Email(db.Model):
                 subject     = self.subject,
                 body_html   = self.get_html(recipient),
                 body_text   = self.body,
-                sender_name = '"{:s} (PeTU)"'.format(self.sender.full_name)
+                sender_name = '"{:s} (PeTU)"'.format(sender.full_name)
             )
 
         self.status = 'SENT'
