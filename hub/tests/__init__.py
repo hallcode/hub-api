@@ -21,7 +21,9 @@ def client():
         SECRET_KEY=b'*T-E&S0T!I_N7G(',
         BCRYPT_LOG_ROUNDS=4,
         WTF_CSRF_ENABLED=False,
-        SQLALCHEMY_DATABASE_URI='sqlite:///test.db'
+        SQLALCHEMY_DATABASE_URI='sqlite:///test.db',
+        STRIPE_SECRET=os.environ.get('STRIPE_TEST_SECRET'),
+        STRIPE_PUBLIC=os.environ.get('STRIPE_TEST_PUBLIC')
     )
 
     with app.test_client() as client:

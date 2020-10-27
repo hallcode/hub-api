@@ -78,7 +78,9 @@ class Payment(db.Model):
     timestamp = db.Column(db.DateTime, nullable=False)
     person_id = db.Column(db.String(10), db.ForeignKey('person.id'), nullable=False)
     amount    = db.Column(db.Numeric(5,3), nullable=False, default=0)
-    status    = db.Column(db.String(7), nullable=False, default='CREATED')
+    status    = db.Column(db.String(15), nullable=False, default='CREATED')
+    
+    payment_intent_id = db.Column(db.String(100), unique=True)
 
     def __init__(self, person, amount):
         self.timestamp = datetime.now()

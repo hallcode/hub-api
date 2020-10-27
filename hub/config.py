@@ -30,3 +30,7 @@ class Config:
     # Email
     GLOBAL_FROM_ADDR = environ.get('GLOBAL_FROM_ADDR', 'dev@localhost.test')
     TEMPLATE_PATH    = environ.get('TEMPLATE_PATH', 'hub/templates')
+
+    # Stripe
+    STRIPE_SECRET = environ.get('STRIPE_SECRET')
+    STRIPE_PUBLIC = environ.get('STRIPE_PUBLIC')
