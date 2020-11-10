@@ -129,3 +129,4 @@ class Email(db.Model):
 
         self.status = 'SENT'
 
+

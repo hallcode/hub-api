@@ -1,29 +1,50 @@
 import stripe
 
 from flask import current_app as app
-from hub.ext import db
+from hub.exts import db
 from hub.models.finance import Payment
+from hub.models.membership import Person
 
 stripe.api_key = app.config['STRIPE_SECRET']
+
+
+def create_customer(person):
+    """
+    Generate a Stripe customer to use for reccuring payments.
+    """
+
+    if person.stripe_customer_id is not None:
+        return stripe.Customer.retrieve(person.stripe_customer_id)
+    
+    customer = stripe.Customer.create(
+        name=person.full_name,
+        description=person.id,
+        email=person.primary_email
+    )
+
+    person.stripe_customer_id = customer['id']
+    db.session.commit()
+
+    return customer
 
 
 def generate_payment(person, amount):
     """
     Generates a payment intent with Stripe and a local payment object.
     This function is only to be used with on-session payments to be
-    collected immediatley after card capture.
+    collected immediately after card capture.
     """
     
     intent = stripe.PaymentIntent.create(
         amount=amount,
         currency='gbp',
-        setup_future_usage=stripe.off_session
+        setup_future_usage='off_session',
+        customer=person.stripe_customer_id
     )
 
-    # Create payment
     payment = Payment(
         person=person,
-        amound=amount
+        amount=amount
     )
     payment.payment_intent_id = intent['id']
 

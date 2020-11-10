@@ -19,8 +19,8 @@ class Band(db.Model):
     rate_id     = db.Column(db.Integer, db.ForeignKey('rate.id'), nullable=False)
 
     def __init__(self, code, rate):
-        self.code    = str(code).upper()
-        self.rate    = rate
+        self.code = str(code).upper()
+        self.rate = rate
 
     @property
     def is_active(self):

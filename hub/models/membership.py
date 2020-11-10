@@ -23,6 +23,10 @@ class Person(db.Model):
     ward_id         = db.Column(db.String(10), nullable=True)
     district_id     = db.Column(db.String(10), nullable=True)
     constituency_id = db.Column(db.String(10), nullable=True)
+    landlord        = db.Column(db.Boolean, nullable=True)
+    own_house       = db.Column(db.Boolean, nullable=True)
+    pays_rent       = db.Column(db.Boolean, nullable=True)
+    restricted_job  = db.Column(db.Boolean, nullable=True)
 
     stripe_customer_id = db.Column(db.String(255), nullable=True)
     stripe_payment_id  = db.Column(db.String(255), nullable=True)
@@ -126,6 +130,7 @@ class Address(db.Model):
     district  = db.Column(db.String(1024))
     city      = db.Column(db.String(1024))
     post_code = db.Column(db.String(10))
+    marketing = db.Column(db.Boolean, nullable=False, default=False)
 
     def __init__(self, person, type, usage, line_1):
         if type not in self.TYPES:
