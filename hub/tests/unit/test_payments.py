@@ -24,20 +24,18 @@ def test_create_payment_intent_service(client, db):
     from hub.models.finance import Payment
     from hub.services.payments import create_customer, generate_payment
 
-    person = Person('anne', 'Person')
+    person = Person('anneother', 'Person')
     addr = Address(person, 'EMAIL', 'PRIMARY', 'success@simulator.amazonses.com')
     db.session.add(person)
     db.session.add(addr)
 
     db.session.commit()
 
-    customer = create_customer(person)
-    intent   = generate_payment(person, 500)
+    customer        = create_customer(person)
+    intent, payment = generate_payment(person, 500)
 
     assert person.stripe_customer_id is not None
     assert Payment.query.with_parent(person).count() > 0
-
-    payment = Payment.query.with_parent(person).first()
     assert payment.payment_intent_id == intent['id']
 
 

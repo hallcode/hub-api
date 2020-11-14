@@ -8,6 +8,7 @@ from string import ascii_uppercase
 from hub.exts import db
 from hub.services.time import months_to_days
 from hub.services.geo import post_code_check
+from hub.services.permissions import person_has, Gates
 
 
 class Person(db.Model):
@@ -72,8 +73,29 @@ class Person(db.Model):
 
     @property
     def is_eligable(self):
+        eligable = True
+        errors   = ()
         if self.age < 16:
-            return False, "Members must be over the age of 16."
+            eligable = False
+            errors = errors + ('Members must be over the age of 16.',)
+        
+        if self.landlord:
+            eligable = False
+            errors = errors + ('Members cannot be landlords.',)
+
+        if self.own_house:
+            eligable = False
+            errors = errors + ('Members must live in a house they do not own.',)
+
+        if self.restricted_job:
+            eligable = False
+            errors = errors + ('Members must not work with evictions.',)
+
+        if not self.pays_rent:
+            eligable = False
+            errors = errors + ('Members must pay some sort of rent for their house.',)
+
+        return eligable, errors
 
     @property
     def primary_email(self):
@@ -109,6 +131,18 @@ class Person(db.Model):
         ).count()
 
         self.id = '{:s}{:s}{:03d}'.format(month, today.strftime('%y'), count+1)
+
+    def has(self, abilities=None, roles=None):
+        from functools import wraps
+        def outer_wrapper(f):
+            @wraps(f)
+            def inner_wrapper(*args, **kwargs):
+                if person_has(self, abilities, roles):
+                    return f(*args, **kwargs)
+                else:
+                    return {}, 403
+            return inner_wrapper
+        return outer_wrapper
 
 
 class Address(db.Model):
@@ -152,6 +186,31 @@ class VerifyToken(db.Model):
         self.token = hashlib.sha512(raw_token.encode('UTF-8')).hexdigest()
 
 
+class Role(db.Model):
+    """
+    Intermediate table between Person and RoleType
+    """
+
+    person_id    = db.Column(db.String(10), db.ForeignKey('person.id'), primary_key=True)
+    role_type_id = db.Column(db.Integer, db.ForeignKey('role_type.id'), primary_key=True)
+    starts_on    = db.Column(db.Date, nullable=False, primary_key=True)
+    ends_on      = db.Column(db.Date, nullable=True)
+
+    abilities = db.relationship('Ability', backref='role', lazy=False)
+
+    def __init__(self, person, role_type, starts_on=datetime.date.today()):
+        self.person    = person
+        self.type      = role_type
+        self.starts_on = starts_on
+
+        if self.type.expires_after is not None:
+            days         = months_to_days(self.type.expires_after, starts_on)
+            self.ends_on = starts_on + datetime.timedelta(days=days)
+
+    def is_active(self):
+        return self.starts_on < datetime.date() < self.ends_on
+
+
 class RoleType(db.Model):
     """
     Types of roles available for people to have
@@ -187,21 +246,22 @@ class RoleType(db.Model):
         return True
 
 
-class Role(db.Model):
+class Ability(db.Model):
     """
-    Intermediate table between Person and RoleType
+    Represents a permission that a role has
     """
 
-    person_id    = db.Column(db.String(10), db.ForeignKey('person.id'), primary_key=True)
-    role_type_id = db.Column(db.Integer, db.ForeignKey('role_type.id'), primary_key=True)
-    starts_on    = db.Column(db.Date, nullable=False, primary_key=True)
-    ends_on      = db.Column(db.Date, nullable=True)
+    role_type_id   = db.Column(db.Integer, primary_key=True)
+    key            = db.Column(db.String(50), primary_key=True)
+    gate_func      = db.Column(db.String(50), nullable=True)
 
-    def __init__(self, person, role_type, starts_on=datetime.date.today()):
-        self.person    = person
-        self.type      = role_type
-        self.starts_on = starts_on
+    def __init__(self, role, key, must_be_active=False):
+        self.role_type_id   = role.id
+        self.key            = key
 
-        if self.type.expires_after is not None:
-            days         = months_to_days(self.type.expires_after, starts_on)
-            self.ends_on = starts_on + datetime.timedelta(days=days)
+    def run_gate(self):
+        if self.gate_func is None:
+            return True
+
+        person = self.role.person
+        return Gates.run(self)

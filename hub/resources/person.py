@@ -22,19 +22,28 @@ class PeopleApi(Resource):
         data = request.get_json()
 
         if data is None:
-            return {}, 400
+            return {
+                "error": "The request was empty."
+            }, 400
 
-        if data["firstName"] is None or data["lastName"] is None:
-            return {}, 400
+        if "firstName" not in data or "lastName" not in data:
+            return {
+                "error": "Missing required fields: firstName or lastName were blank."
+            }, 400
 
         person = Person(data["firstName"], data["lastName"])
         
-        if data["yearOfBirth"] is not None and data["monthOfBirth"] is not None and data["dayOfBirth"] is not None:
-            person.date_of_birth = datetime.date(
-                data["yearOfBirth"], 
-                data["monthOfBirth"],
-                data["dayOfBirth"]
-            )
+        if "yearOfBirth" not in data or "monthOfBirth" not in data or "dayOfBirth" not in data:
+            try:
+                person.date_of_birth = datetime.date(
+                    int(data["yearOfBirth"]), 
+                    int(data["monthOfBirth"]),
+                    int(data["dayOfBirth"])
+                )
+            except:
+                return {
+                    "error": "The date of birth you provided was not valid."
+                }, 400
 
         db.session.add(person)
         db.session.commit()
