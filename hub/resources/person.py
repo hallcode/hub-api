@@ -52,6 +52,10 @@ class PeopleApi(Resource):
         token = create_access_token(identity=person.id)
         
         return {
+            "person": {
+                "membership_number": person.id,
+                "fullName": person.full_name
+            },
             "auth_code": token
         }, 200
 
