@@ -34,7 +34,7 @@ class PeopleApi(Resource):
 
         person = Person(data["firstName"], data["lastName"])
         
-        if "yearOfBirth" not in data or "monthOfBirth" not in data or "dayOfBirth" not in data:
+        if "yearOfBirth" in data and "monthOfBirth" in data and "dayOfBirth" in data:
             try:
                 person.date_of_birth = datetime.date(
                     int(data["yearOfBirth"]), 
