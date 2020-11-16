@@ -9,7 +9,7 @@ from flask import Flask
 from .config import Config
 from hub.routes import load_routes
 from .models import import_all_models
-from .exts import db, migrate, api
+from .exts import db, migrate, api, jwt
 
 
 def create_app():
@@ -41,3 +41,4 @@ def load_plugins(app):
 
     migrate.init_app(app, db)
     api.init_app(app)
+    jwt.init_app(app)

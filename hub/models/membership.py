@@ -196,8 +196,6 @@ class Role(db.Model):
     starts_on    = db.Column(db.Date, nullable=False, primary_key=True)
     ends_on      = db.Column(db.Date, nullable=True)
 
-    abilities = db.relationship('Ability', backref='role', lazy=False)
-
     def __init__(self, person, role_type, starts_on=datetime.date.today()):
         self.person    = person
         self.type      = role_type
@@ -209,6 +207,11 @@ class Role(db.Model):
 
     def is_active(self):
         return self.starts_on < datetime.date() < self.ends_on
+
+
+    @property
+    def abilities(self):
+        return self.type.abilities
 
 
 class RoleType(db.Model):
@@ -251,7 +254,7 @@ class Ability(db.Model):
     Represents a permission that a role has
     """
 
-    role_type_id   = db.Column(db.Integer, primary_key=True)
+    role_type_id   = db.Column(db.Integer, db.ForeignKey('role_type.id'), primary_key=True)
     key            = db.Column(db.String(50), primary_key=True)
     gate_func      = db.Column(db.String(50), nullable=True)
 

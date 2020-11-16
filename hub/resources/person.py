@@ -4,10 +4,11 @@ APIs for registering and becoming a member.
 
 import datetime
 
-from flask import Response, request, current_app
+from flask import Response, request, current_app, jsonify
 from flask_restful import Resource
+from flask_jwt_extended import create_access_token
 
-from hub.exts import db
+from hub.exts import db, jwt
 from hub.models.membership import Person
 
 
@@ -47,8 +48,12 @@ class PeopleApi(Resource):
 
         db.session.add(person)
         db.session.commit()
+
+        token = create_access_token(identity=person.id)
         
-        return person.__dict__, 201
+        return {
+            "auth_code": token
+        }, 200
 
 
 class PersonApi(Resource):

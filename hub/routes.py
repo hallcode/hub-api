@@ -1,7 +1,8 @@
 from hub.resources import (
     base,
     verify,
-    person
+    person,
+    auth
 )
 
 
@@ -15,6 +16,7 @@ def load_routes(api):
     api.add_resource(base.BaseApi, '/api', endpoint='_base')
 
     # Auth routes
+    api.add_resource(auth.LoginApi, '/api/login')
     api.add_resource(verify.VerifyApi, '/api/verify/<string:address_text>')
 
     # Person
