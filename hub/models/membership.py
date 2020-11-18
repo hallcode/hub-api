@@ -8,7 +8,7 @@ from string import ascii_uppercase
 from hub.exts import db
 from hub.services.time import months_to_days
 from hub.services.geo import post_code_check
-from hub.services.permissions import person_has, Gates
+from hub.services.permissions import person_has, Gate
 
 
 class Person(db.Model):
@@ -99,11 +99,30 @@ class Person(db.Model):
 
     @property
     def primary_email(self):
-        return Address.query.get((self.id, 'EMAIL', 'PRIMARY')).line_1
+        address = Address.query.get((self.id, 'EMAIL', 'PRIMARY'))
+        if address is not None:
+            return address.line_1
+        return None
+
+    @primary_email.setter
+    def primary_email(self, new_email):
+        if self.primary_email is not None:
+            if new_email == self.primary_email:
+                return
+            address = Address.query.get((self.id, 'EMAIL', 'PRIMARY'))
+            address.line_1 = new_email
+        else:
+            address = Address(self, 'EMAIL', 'PRIMARY', new_email)
+            db.session.add(address)
+        
+        db.session.commit()
 
     @property
     def sms_number(self):
-        return Address.query.get((self.id, 'TEL', 'SMS')).line_1
+        address = Address.query.get((self.id, 'TEL', 'SMS'))
+        if address is not None:
+            return address.line_1
+        return None
 
     def get_address(self, type='HOME'):
         return Address.query.get((self.id, 'ADDR', type))
@@ -267,4 +286,4 @@ class Ability(db.Model):
             return True
 
         person = self.role.person
-        return Gates.run(self)
+        return Gate.run(self)

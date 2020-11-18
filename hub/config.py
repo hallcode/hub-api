@@ -20,6 +20,7 @@ class Config:
 
     # Do not set FLASK_ENV here! It will have no effect.
     SECRET_KEY = environ.get('SECRET_KEY')
+    PROPAGATE_EXCEPTIONS = environ.get('PROPAGATE_EXCEPTIONS', True)
 
     # Database
     SQLALCHEMY_DATABASE_URI        = environ.get('SQLALCHEMY_DATABASE_URI')

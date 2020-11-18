@@ -26,6 +26,10 @@ def create_app():
 
         load_plugins(app)
 
+        import hub.services.middleware
+
+        handle_errors(app)
+
     return app
 
 
@@ -42,3 +46,16 @@ def load_plugins(app):
     migrate.init_app(app, db)
     api.init_app(app)
     jwt.init_app(app)
+
+
+def handle_errors(app):
+    """
+    Properly handle errors
+    """
+
+    from hub.services.errors import Error
+
+    def handle_generic_error(e):
+        return {"error": str(e)}, e.code
+
+    app.register_error_handler(Error, handle_generic_error)
