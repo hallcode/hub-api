@@ -44,3 +44,19 @@ class NotFoundError(Error):
         self.code = 404
         self.message = f"{self.resource_name.title()} not found"
         super().__init__(self.message, self.code)
+
+
+class InvalidValueError(Error):
+    """Invalid user input."""
+    def __init__(self, field, message):
+        self.code = 400
+        self.message = f"The supplied value for '{field}' was invalid, {message}"
+        super().__init__(self.message, self.code)
+
+
+class EmptyBodyError(Error):
+    """No user input"""
+    def __init__(self):
+        self.code = 400
+        self.message = "No values were supplied."
+        super().__init__(self.message, self.code)

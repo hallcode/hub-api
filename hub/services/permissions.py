@@ -20,12 +20,24 @@ class Gate:
         except: 
             raise UserNotAuthenticated
 
+        if "roles" in kwargs:
+            roles = kwargs["roles"]
+        else:
+            roles = None
+
+        if "abilities" in kwargs:
+            abilities = kwargs["abilities"]
+        else:
+            abilities = None
+
+        if not person_has(current_user, abilities, roles):
+            raise ActionNotAllowed
+
         for f in args:
             if hasattr(gate, f) and callable(func := getattr(gate, f)):
                 func(**kwargs)
         
         return True
-
 
     @staticmethod
     def run(ability, **kwargs):
@@ -42,16 +54,13 @@ class Gate:
         
         return False
 
-    def person_is_active(self, **kwargs):
-        return True
+    def user_logged_on(self, **kwargs):
+        return
 
     def user_is_person(self, **kwargs):
         """
-        Check if user can edit the supplied person
+        Check if user is the same as the person object
         """
-        if "person" not in kwargs:
-            return
-
         person = kwargs["person"]
 
         if person.id != self.person.id:
@@ -85,4 +94,5 @@ def person_has(person, abilities, roles):
                     can_user = True
         except:
             raise ValueError("roles must be None, list or tuple")
-        
+
+    return can_user

@@ -3,7 +3,8 @@ from flask_restful import Resource
 from passlib.hash import argon2
 from flask_jwt_extended import create_access_token
 
-from hub.models.membership import Person
+from hub.models.membership import Person, Address
+from hub.services.errors import InvalidValueError
 
 
 class LoginApi(Resource):
@@ -16,18 +17,22 @@ class LoginApi(Resource):
         data = request.get_json()
 
         if "email" not in data:
-            return {"errors": ["Please provide an email address."]}, 400
+            raise InvalidValueError("email", "field is blank")
 
         if "password" not in data:
-            return {"errors": ["Please provide your password."]}, 400
+            raise InvalidValueError("password", "field is blank")
 
-        person = Person.query.filter(Person.primary_email == data["email"]).first()
+        person = None
+        addr = Address.query.filter(Address.line_1 == data["email"]).first()
+
+        if addr is not None:
+            person = addr.person
 
         if person is None:
-            return {"errors": ["The username or password you provided was not recognised."]}, 400
+            raise InvalidValueError("email", "user not found")
 
         if not argon2.verify(data["password"], person.password):
-            return {"errors": ["The username or password you provided was not recognised."]}, 400
+            raise InvalidValueError("email", "user not found")
 
         token = create_access_token(identity=person.id)
 

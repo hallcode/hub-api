@@ -9,6 +9,7 @@ from hub.exts import db
 from hub.services.time import months_to_days
 from hub.services.geo import post_code_check
 from hub.services.permissions import person_has, Gate
+from hub.services.errors import InvalidValueError
 
 
 class Person(db.Model):
@@ -106,6 +107,12 @@ class Person(db.Model):
 
     @primary_email.setter
     def primary_email(self, new_email):
+        exists = Address.query.filter(
+            (Address.line_1 == new_email) & (Address.person_id != self.id)
+        ).count()
+        if exists:
+            raise InvalidValueError("primaryEmail", "unable to add specified email address")
+
         if self.primary_email is not None:
             if new_email == self.primary_email:
                 return

@@ -11,8 +11,9 @@ from passlib.hash import argon2
 
 from hub.exts import db, jwt
 from hub.models.membership import Person, Address
+from hub.schemas.membership import PersonSchema
 from hub.services.permissions import Gate
-from hub.services.errors import UserNotAuthenticated, ActionNotAllowed, NotFoundError
+from hub.services.errors import UserNotAuthenticated, ActionNotAllowed, NotFoundError, InvalidValueError, EmptyBodyError
 
 
 class PeopleApi(Resource):
@@ -26,14 +27,12 @@ class PeopleApi(Resource):
         data = request.get_json()
 
         if data is None:
-            return {
-                "error": "The request was empty."
-            }, 400
+            raise EmptyBodyError
 
-        if "firstName" not in data or "lastName" not in data:
-            return {
-                "error": "Missing required fields: firstName or lastName were blank."
-            }, 400
+        if "firstName" not in data:
+            raise InvalidValueError('firstName', 'field is blank')
+        if "lastName" not in data:
+            raise InvalidValueError('lastName', 'field is blank')
 
         person = Person(data["firstName"], data["lastName"])
         
@@ -45,9 +44,7 @@ class PeopleApi(Resource):
                     int(data["dayOfBirth"])
                 )
             except:
-                return {
-                    "error": "The date of birth you provided was not valid."
-                }, 400
+                raise InvalidValueError('[x]ofBirth', 'date was not valid')
 
         db.session.add(person)
         db.session.commit()
@@ -70,7 +67,14 @@ class PersonApi(Resource):
         Get a single person
         """
 
-        raise NotFoundError(Person)
+        person = Person.query.get(person_id)
+
+        Gate.check('user_is_person', person=person)
+
+        if person is None:
+            raise NotFoundError(Person)
+
+        return {"person":PersonSchema().dump(person)}
 
     def patch(self, person_id):
         """
@@ -86,8 +90,6 @@ class PersonApi(Resource):
 
         data = request.get_json()
 
-        errors = []
-
         for key, value in data.items():
             if key == "firstName":
                 person.first_name = value
@@ -98,19 +100,28 @@ class PersonApi(Resource):
                 continue
 
             if key == "yearOfBirth":
-                person.date_of_birth = person.date_of_birth.replace(year=value)
+                try:
+                    person.date_of_birth = person.date_of_birth.replace(year=value)
+                except:
+                    raise InvalidValueError(key, 'date is invalid')
                 continue
 
             if key == "monthOfBirth":
                 if 1 > value < 12:
-                    errors.append("Month must be between 1 and 12.")
+                    raise InvalidValueError(key, 'month must be between 1 and 12')
                     continue
 
-                person.date_of_birth = person.date_of_birth.replace(month=value)
+                try:
+                    person.date_of_birth = person.date_of_birth.replace(month=value)
+                except:
+                    raise InvalidValueError(key, 'date is invalid')
                 continue
 
             if key == "dayOfBirth":
-                person.date_of_birth = person.date_of_birth.replace(day=value)
+                try:
+                    person.date_of_birth = person.date_of_birth.replace(day=value)
+                except:
+                    raise InvalidValueError(key, 'date is invalid')
                 continue
 
             if key == "password":
@@ -134,23 +145,19 @@ class PersonApi(Resource):
                 continue
 
             if key == "primaryEmail":
-                try:
-                    person.primary_email = value
-                except:
-                    errors.append("There was an error adding the email address.")
-                continue
+                person.primary_email = value
 
             if key == "marketingConsent":
                 email = Address.query.get((person.id, 'EMAIL', 'PRIMARY')).first()
                 if email is None:
-                    errors.append("There is no email to add consent to.")
+                    raise InvalidValueError(key, 'no valid email')
 
                 email.marketing = True
                 continue
 
             if key == "address":
                 if not all (k in data["address"] for k in ("line_1", "district", "city", "postCode")):
-                    errors.append("You must provide a full address (line_1, district, city, postCode).")
+                    raise InvalidValueError(key, 'please provide all address lines (i.e. "line_1", "district", "city", "postCode")')
                     continue
 
                 address = person.get_address()
@@ -168,14 +175,9 @@ class PersonApi(Resource):
                 person.set_locale()
                 continue
 
-        if len(errors) > 0:
-            return {"errors": errors}, 400
-
         try:
             db.session.commit()
         except:
-            return {
-                "errors": ["There was a problem."]
-            }, 400
+            raise Exception('There was a problem making the requested change')
 
         return {}, 204
