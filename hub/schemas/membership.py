@@ -1,13 +1,7 @@
-from marshmallow import Schema, fields
+from hub.exts import ma
+from hub.models.membership import Person
+from hub.models.finance import Payment
 
-class PersonSchema(Schema):
-    id = fields.String()
-    first_name = fields.String(load_only=True)
-    last_name = fields.String(load_only=True)
-    full_name = fields.Method("get_full_name", dump_only=True)
-    primary_email = fields.Email()
-    date_of_birth = fields.Date()
-    password = fields.Str(load_only=True)
-
-    def get_full_name(self, person):
-        return f"{person.first_name} {person.last_name}"
+class PersonSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = Person

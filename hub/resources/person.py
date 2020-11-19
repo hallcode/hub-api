@@ -26,8 +26,7 @@ class PeopleApi(Resource):
 
         data = request.get_json()
 
-        if data is None:
-            raise EmptyBodyError
+        PersonSchema().load(data)
 
         if "firstName" not in data:
             raise InvalidValueError('firstName', 'field is blank')

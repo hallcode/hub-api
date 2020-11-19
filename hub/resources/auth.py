@@ -4,6 +4,7 @@ from passlib.hash import argon2
 from flask_jwt_extended import create_access_token
 
 from hub.models.membership import Person, Address
+from hub.schemas.membership import PersonSchema
 from hub.services.errors import InvalidValueError
 
 
@@ -34,8 +35,12 @@ class LoginApi(Resource):
         if not argon2.verify(data["password"], person.password):
             raise InvalidValueError("email", "user not found")
 
-        token = create_access_token(identity=person.id)
+        token         = create_access_token(identity=person.id)
+        refresh_token = create_refresh_token(identity=person.id)
 
-        return {"auth_token": token}, 200
+        return {
+            "auth_token": token,
+            "person": PersonSchema.dump(person)
+        }, 200
 
         

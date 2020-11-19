@@ -2,6 +2,9 @@
 Entry point for the Flask app
 """
 
+# System imports
+import json
+
 # Framework import
 from flask import Flask
 
@@ -9,7 +12,7 @@ from flask import Flask
 from .config import Config
 from hub.routes import load_routes
 from .models import import_all_models
-from .exts import db, migrate, api, jwt
+from .exts import db, migrate, api, jwt, ma
 
 
 def create_app():
@@ -46,6 +49,7 @@ def load_plugins(app):
     migrate.init_app(app, db)
     api.init_app(app)
     jwt.init_app(app)
+    ma.init_app(app)
 
 
 def handle_errors(app):
@@ -54,8 +58,17 @@ def handle_errors(app):
     """
 
     from hub.services.errors import Error
+    from marshmallow.exceptions import ValidationError
 
     def handle_generic_error(e):
         return {"error": str(e)}, e.code
 
+    def handle_validation_error(e):
+        value = {
+            "error": "[400] There was an error with the supplied values.",
+            "fields": e.__dict__["messages"]
+        }
+        return json.dumps(value), 400
+
     app.register_error_handler(Error, handle_generic_error)
+    app.register_error_handler(ValidationError, handle_validation_error)
