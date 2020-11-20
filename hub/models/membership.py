@@ -2,8 +2,8 @@
 Models for everything relating to people (users, members, etc)
 """
 import datetime, calendar, hashlib
-from math import floor
 from string import ascii_uppercase
+from passlib.hash import argon2
 
 from hub.exts import db
 from hub.services.time import months_to_days
@@ -33,7 +33,7 @@ class Person(db.Model):
     stripe_customer_id = db.Column(db.String(255), nullable=True)
     stripe_payment_id  = db.Column(db.String(255), nullable=True)
 
-    password = db.Column(db.String(300), nullable=True)
+    password_hash = db.Column(db.String(300), nullable=True)
 
     addresses = db.relationship('Address', backref='person', lazy=False)
     roles     = db.relationship('Role', backref='person', lazy=False)
@@ -123,6 +123,22 @@ class Person(db.Model):
             db.session.add(address)
         
         db.session.commit()
+
+    @property
+    def password(self):
+        raise Exception("Do not access password property directly.")
+
+    @password.setter
+    def password(self, password_raw):
+        # @TODO Password verification required
+        if password_raw is None:
+            return
+        self.password_hash = argon2.hash(password_raw)
+
+    def check_password(self, password_raw):
+        if password_raw is None or self.password_hash is None:
+            return False
+        return argon2.verify(password_raw, self.password_hash)
 
     @property
     def sms_number(self):
