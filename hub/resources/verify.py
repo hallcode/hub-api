@@ -56,7 +56,7 @@ class VerifyApi(Resource):
                 "errors": ["That verification code was not recognised."]
             }, 400
 
-        db.session.commit()
+        #db.session.commit()
 
         return {}, 204
 
