@@ -6,14 +6,14 @@ import datetime
 
 from flask import Response, request, current_app
 from flask_restful import Resource
-from flask_jwt_extended import create_access_token, jwt_required, current_user
+from flask_jwt_extended import create_access_token
 from passlib.hash import argon2
 
 from hub.exts import db, jwt
-from hub.models.membership import Person, Address
+from hub.models.membership import Person
 from hub.schemas.membership import PersonSchema
 from hub.services.permissions import Gate
-from hub.services.errors import UserNotAuthenticated, ActionNotAllowed, NotFoundError, InvalidValueError, EmptyBodyError
+from hub.services.errors import NotFoundError
 
 
 class PeopleApi(Resource):

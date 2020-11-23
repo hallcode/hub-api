@@ -30,12 +30,13 @@ class Gate:
         else:
             abilities = None
 
-        if not person_has(current_user, abilities, roles):
-            raise ActionNotAllowed
-
-        for f in args:
-            if hasattr(gate, f) and callable(func := getattr(gate, f)):
-                func(**kwargs)
+        try:
+            for f in args:
+                if hasattr(gate, f) and callable(func := getattr(gate, f)):
+                    func(**kwargs)
+        except ActionNotAllowed:
+            if not person_has(current_user, abilities, roles):
+                raise ActionNotAllowed
         
         return True
 

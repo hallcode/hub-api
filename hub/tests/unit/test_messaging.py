@@ -3,15 +3,14 @@ from hub.tests import client, db
 
 def test_email_send(client, db):
     
-    from hub.models.membership import Person, Address
+    from hub.models.membership import Person
     from hub.models.messaging import Email
     from hub.services.email import send_email
 
     person = Person('anne', 'Person')
-    addr1 = Address(person, 'EMAIL', 'PRIMARY', 'success@simulator.amazonses.com')
+    person.primary_address = 'success@simulator.amazonses.com'
+    
     db.session.add(person)
-    db.session.add(addr1)
-
     db.session.commit()
 
     email = Email(
@@ -23,6 +22,8 @@ def test_email_send(client, db):
 
 I hope you got this! It's a test :)"""
     )
+
+    email.type_code = "TRN"
 
     assert email.status == 'CREATED'
 
@@ -38,15 +39,13 @@ I hope you got this! It's a test :)"""
 
 def test_email_bounce(client, db):
     
-    from hub.models.membership import Person, Address
+    from hub.models.membership import Person
     from hub.services.email import send_email
 
     person = Person('bad', 'email')
+    person.primary_email = 'bounce@simulator.amazonses.com'
+
     db.session.add(person)
-
-    addr = Address(person, 'EMAIL', 'PRIMARY', 'bounce@simulator.amazonses.com')
-    db.session.add(addr)
-
     db.session.commit()
 
     r = send_email(

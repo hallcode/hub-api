@@ -3,7 +3,7 @@ from flask_restful import Resource
 from passlib.hash import argon2
 from flask_jwt_extended import create_access_token, create_refresh_token
 
-from hub.models.membership import Person, Address
+from hub.models.membership import Person, EmailAddress
 from hub.schemas.membership import PersonSchema
 from hub.services.errors import InvalidValueError
 
@@ -24,10 +24,10 @@ class LoginApi(Resource):
             raise InvalidValueError("password", "field is blank")
 
         person = None
-        addr = Address.query.filter(Address.line_1 == data["email"]).first()
+        email = EmailAddress.query.filter(EmailAddress.email == data["email"]).filter(EmailAddress.type_code == 'PRIMARY').first()
 
-        if addr is not None:
-            person = addr.person
+        if email is not None:
+            person = email.person
 
         if person is None:
             raise InvalidValueError("email", "user not found")

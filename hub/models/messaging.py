@@ -2,7 +2,7 @@ from markdown import markdown
 import chevron, datetime
 
 from hub.exts import db
-from hub.models.membership import Person
+from hub.models.membership import Person, EmailSubscription, EmailAddress
 from hub.services import email
 
 
@@ -22,7 +22,7 @@ class Email(db.Model):
     sent_at        = db.Column(db.DateTime, nullable=True)
     hold_until     = db.Column(db.DateTime, nullable=True)
     status         = db.Column(db.String(10))
-    type           = db.Column(db.String(3), default='STD')
+    type_code      = db.Column(db.String(3), nullable=False)
     to_all_members = db.Column(db.Boolean, default=False)
     link           = db.Column(db.String, nullable=True)
     link_text      = db.Column(db.String, nullable=True)
@@ -64,7 +64,6 @@ class Email(db.Model):
         )
 
         return text
-
 
     def get_html(self, to, extra_data=None):
         template = email.get_email_template('base.html.mustache')
@@ -116,8 +115,22 @@ class Email(db.Model):
             sender = Person('Peterborough Tenants', 'Union')
 
         for recipient in subs:
-            if recipient.primary_email is None:
+            r_email = EmailAddress.query \
+                                  .with_parent(recipient) \
+                                  .filter(EmailAddress.type_code == 'PRIMARY') \
+                                  .filter(EmailAddress.verified == True) \
+                                  .filter(EmailAddress.hard_bounce != True) \
+                                  .first()
+
+            if r_email is None:
                 continue
+
+            subscription = EmailSubscription.query \
+                                            .with_parent(recipient) \
+                                            .filter(EmailSubscription.type_code == self.type_code) \
+                                            .first()
+            if subscriptions is None:
+                continue 
             
             email.send_email(
                 recipient   = recipient.primary_email,
