@@ -34,8 +34,8 @@ class Gate:
             for f in args:
                 if hasattr(gate, f) and callable(func := getattr(gate, f)):
                     func(**kwargs)
-        except ActionNotAllowed:
-            if not person_has(current_user, abilities, roles):
+        except:
+            if not person_has(gate.person, abilities, roles) or (roles is None and abilities is None):
                 raise ActionNotAllowed
         
         return True
@@ -69,10 +69,7 @@ class Gate:
 
 
 def person_has(person, abilities, roles):
-    if roles is None and abilities is None:
-        return True
-    else:
-        can_user = False
+    can_user = False
 
     if abilities is not None:
         pa = []

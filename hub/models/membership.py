@@ -145,8 +145,16 @@ class Person(db.Model):
 
     @primary_email.setter
     def primary_email(self, email):
-        new_email = EmailAddress(self, email, 'PRIMARY')
-        db.session.add(new_email)
+        existing_email = EmailAddress.query.filter(EmailAddress.person_id == self.id).filter(EmailAddress.type_code == 'PRIMARY').first()
+        if existing_email is None:
+            new_email = EmailAddress(self, email, 'PRIMARY')
+            db.session.add(new_email)
+
+        else:
+            if email != existing_email.email:
+                existing_email.verified = False
+            existing_email.email = email
+            
 
     def has(self, abilities=None, roles=None):
         from functools import wraps
@@ -228,8 +236,11 @@ class EmailAddress(db.Model):
         self.email  = email
         self.type   = type_code
 
-        transactional_subscription = EmailSubscription(person, 'TRN')
-        db.session.add(transactional_subscription)
+        try:
+            transactional_subscription = EmailSubscription(person, 'TRN')
+            db.session.add(transactional_subscription)
+        except: 
+            pass
 
     @property
     def type(self):

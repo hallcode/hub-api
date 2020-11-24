@@ -54,7 +54,7 @@ class PersonApi(Resource):
 
         person = Person.query.get(person_id)
 
-        Gate.check('user_is_person', person=person)
+        gc = Gate.check('user_is_person', person=person)
 
         if person is None:
             raise NotFoundError(Person)
