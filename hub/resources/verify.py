@@ -27,11 +27,7 @@ class VerifyApi(Resource):
         
         self._send_verification_email(addr, code)
 
-<<<<<<< HEAD
-        return {}, 200
-=======
         return {}, 204
->>>>>>> d3b827d36c04d22059253d0fcc4456aa324e1ed2
 
 
     def post(self, address_text):
