@@ -30,9 +30,7 @@ class VerifyApi(Resource):
         
         self._send_verification_email(addr, code)
 
-        return {
-            "code": code
-        }, 200
+        return {}, 200
 
 
     def post(self, address_text):
@@ -75,7 +73,7 @@ class VerifyApi(Resource):
 
         email = Email(
             None,
-            'Email verification coded',
+            'Email verification code',
             """Your email verification code is:
 
 # {:d}
