@@ -35,9 +35,12 @@ class Person(db.Model):
 
     password_hash = db.Column(db.String(300), nullable=True)
 
-    addresses = db.relationship('Address', backref='person', lazy=False)
-    roles     = db.relationship('Role', backref='person', lazy=False)
-    payments  = db.relationship('Payment', backref='person', lazy=True)
+    addresses       = db.relationship('Address', backref='person', lazy=False)
+    phone_numbers   = db.relationship('PhoneNumber', backref='person', lazy=True)
+    email_addresses = db.relationship('EmailAddress', backref='person', lazy=False)
+    email_sub       = db.relationship('EmailSubscription', backref='person', lazy=False)
+    roles           = db.relationship('Role', backref='person', lazy=False)
+    payments        = db.relationship('Payment', backref='person', lazy=True)
 
     def __init__(self, first_name, last_name):
         self.first_name = first_name.title()
@@ -58,7 +61,7 @@ class Person(db.Model):
         return '{:s}, {:s}'.format(self.last_name.upper(), self.first_name)
 
     def get_age(self, on=datetime.date.today()):
-        age  = on.year  - self.date_of_birth.year
+        age = on.year - self.date_of_birth.year
 
         if on.month > self.date_of_birth.month:
             return age
@@ -99,32 +102,6 @@ class Person(db.Model):
         return eligable, errors
 
     @property
-    def primary_email(self):
-        address = Address.query.get((self.id, 'EMAIL', 'PRIMARY'))
-        if address is not None:
-            return address.line_1
-        return None
-
-    @primary_email.setter
-    def primary_email(self, new_email):
-        exists = Address.query.filter(
-            (Address.line_1 == new_email) & (Address.person_id != self.id)
-        ).count()
-        if exists:
-            raise InvalidValueError("primaryEmail", "unable to add specified email address")
-
-        if self.primary_email is not None:
-            if new_email == self.primary_email:
-                return
-            address = Address.query.get((self.id, 'EMAIL', 'PRIMARY'))
-            address.line_1 = new_email
-        else:
-            address = Address(self, 'EMAIL', 'PRIMARY', new_email)
-            db.session.add(address)
-        
-        db.session.commit()
-
-    @property
     def password(self):
         raise Exception("Do not access password property directly.")
 
@@ -140,30 +117,6 @@ class Person(db.Model):
             return False
         return argon2.verify(password_raw, self.password_hash)
 
-    @property
-    def sms_number(self):
-        address = Address.query.get((self.id, 'TEL', 'SMS'))
-        if address is not None:
-            return address.line_1
-        return None
-
-    def get_address(self, type='HOME'):
-        return Address.query.get((self.id, 'ADDR', type))
-
-    def set_locale(self):
-        addr = self.get_address()
-        if addr is None:
-            return 
-
-        codes = post_code_check(addr.post_code)
-
-        if codes is None:
-            return
-
-        self.ward_id         = codes['admin_ward']
-        self.district_id     = codes['admin_district']
-        self.constituency_id = codes['parliamentary_constituency']
-
     def set_id(self):
         today = datetime.date.today()
 
@@ -172,7 +125,36 @@ class Person(db.Model):
             Person.id.startswith('{:s}{:s}'.format(month, today.strftime('%y')))
         ).count()
 
-        self.id = '{:s}{:s}{:03d}'.format(month, today.strftime('%y'), count+1)
+        self.id = '{:s}{:s}{:02d}'.format(month, today.strftime('%y'), count+1)
+        checksum = str(self.calculate_id_checksum())
+        self.id = '{:s}{:s}{:d}'.format(self.id, checksum, len(checksum))
+
+    def calculate_id_checksum(self):
+        checksum = 0
+        for char in self.id:
+            checksum = checksum + ord(char)
+        
+        checksum = checksum ** 2
+        return checksum % 99
+
+    @property
+    def primary_email(self):
+        for email in self.email_addresses:
+            if email.type_code == 'PRIMARY':
+                return email.email
+
+    @primary_email.setter
+    def primary_email(self, email):
+        existing_email = EmailAddress.query.filter(EmailAddress.person_id == self.id).filter(EmailAddress.type_code == 'PRIMARY').first()
+        if existing_email is None:
+            new_email = EmailAddress(self, email, 'PRIMARY')
+            db.session.add(new_email)
+
+        else:
+            if email != existing_email.email:
+                existing_email.verified = False
+            existing_email.email = email
+            
 
     def has(self, abilities=None, roles=None):
         from functools import wraps
@@ -192,33 +174,184 @@ class Address(db.Model):
     Addresses
     """
 
-    TYPES = {
-        "ADDR": ('HOME','BILLING','POST'),
-        "EMAIL": ('PRIMARY','BACKUP'),
-        "TEL": ('SMS','LANDLINE')
-    }
+    TYPES = (
+        'HOME',
+        'BILLING',
+        'POSTAL',
+        'TEMP',
+    )
     
-    person_id = db.Column(db.String(10), db.ForeignKey('person.id'), primary_key=True)
-    type      = db.Column(db.String(10), primary_key=True)
-    usage     = db.Column(db.String(10), primary_key=True)
-    verified  = db.Column(db.Boolean, nullable=False, default=False)
-    line_1    = db.Column(db.String(1024))
-    district  = db.Column(db.String(1024))
-    city      = db.Column(db.String(1024))
-    post_code = db.Column(db.String(10))
-    marketing = db.Column(db.Boolean, nullable=False, default=False)
+    person_id   = db.Column(db.String(10), db.ForeignKey('person.id'), primary_key=True)
+    type_code   = db.Column(db.String(10), primary_key=True)
+    line_1      = db.Column(db.String(1024))
+    district    = db.Column(db.String(1024))
+    city        = db.Column(db.String(1024))
+    post_code   = db.Column(db.String(13))
 
-    def __init__(self, person, type, usage, line_1):
-        if type not in self.TYPES:
-            raise Exception
-        self.type = type
-        if usage not in self.TYPES[type]:
-            raise Exception
-        self.usage = usage
+    def __init__(self, person, line_1, post_code, type):
+        self.person    = person
+        self.line_1    = line_1
+        self.post_code = post_code
+        self.type      = type
 
+        codes = post_code_check(self.post_code)
+
+        if codes is None:
+            return
+
+        self.person.ward_id         = codes['admin_ward']
+        self.person.district_id     = codes['admin_district']
+        self.person.constituency_id = codes['parliamentary_constituency']
+
+    @property
+    def type(self):
+        return self.type_code.lower()
+
+    @type.setter
+    def type(self, code):
+        if code not in self.TYPES:
+            raise InvalidValueError('address.type', 'Invalid type code')
+
+        self.type_code = code.upper()
+
+
+class EmailAddress(db.Model):
+    """
+    Email Addresses
+    """
+
+    TYPES = (
+        'PRIMARY',
+        'BACKUP'
+    )
+
+    person_id   = db.Column(db.String(10), db.ForeignKey('person.id'), primary_key=True)
+    type_code   = db.Column(db.String(10), primary_key=True)
+    email       = db.Column(db.String(1024), unique=True, nullable=False)
+    verified    = db.Column(db.Boolean, nullable=False, default=False)
+    hard_bounce = db.Column(db.Boolean, nullable=False, default=False)
+
+    def __init__(self, person, email, type_code='PRIMARY'):
         self.person = person
-        self.line_1 = line_1
-        
+        self.email  = email
+        self.type   = type_code
+
+        try:
+            transactional_subscription = EmailSubscription(person, 'TRN')
+            db.session.add(transactional_subscription)
+        except: 
+            pass
+
+    @property
+    def type(self):
+        return self.type_code.lower()
+
+    @type.setter
+    def type(self, code):
+        if code not in self.TYPES:
+            raise InvalidValueError('email.type', 'invalid type code')
+
+        self.type_code = code.upper()
+
+    def verify(self, code):
+        test_token = self.email + str(code)
+        test_token = hashlib.sha512(test_token.encode('UTF-8')).hexdigest()
+        token = VerifyToken.query.get(test_token)
+
+        if token is None:
+            return False
+
+        self.verified = True
+        return True
+
+    @property
+    def is_active(self):
+        return self.verified and not self.hard_bounce
+
+
+class EmailSubscription(db.Model):
+    """
+    Record GDPR consent for each type of email we might send.
+    Don't include transactional emails here, these will always be sent.
+    """
+
+    TYPES = (
+        ( "TRN", "Transactional", "Emails about your membership or user account. This could be a password reset email, or information about your monthly payments. We'lla lways send you these.", True),
+        ( "CWK", "Casework and advice", "If you ask us for advice or help on your case, we'll email you about that.", True),
+        ( "CON", "Constitutional", "Emails about elections and AGMs.", True ),
+        ( "NAI", "Newsletters & Information", "Updates, information, and newsletters about the Union, its campaigns, and anything we think you might be interested in.", False ),
+        ( "EVN", "Events", "Emails about protests, upcoming events, ordinary meetings and other things you can get involved in.", False ),
+    )
+
+    person_id   = db.Column(db.String(10), db.ForeignKey('person.id'), primary_key=True)
+    type_code   = db.Column(db.String(3), primary_key=True)
+    created_at  = db.Column(db.DateTime, default=datetime.datetime.now(), nullable=False)
+    source      = db.Column(db.String(30), nullable=False, default='online:join_form')
+    text_shown  = db.Column(db.Text, nullable=False)
+
+    def __init__(self, person, type_code):
+        self.person     = person
+        self.type       = type_code
+        self.created_at = datetime.datetime.now()
+
+    class SubscriptionType:
+        def __init__(self, code, types):
+            for t in types:
+                if code not in t:
+                    continue
+
+                self.code        = t[0]
+                self.title       = t[1]
+                self.description = t[2]
+                self.required    = t[3]
+                return
+
+            raise InvalidValueError('email_subscription.type', 'invalid type code')
+
+    @property
+    def type(self):
+        return self.SubscriptionType(self.type_code.upper(), self.TYPES)
+
+    @type.setter
+    def type(self, code):
+        code = self.SubscriptionType(code.upper(), self.TYPES)
+
+        self.type_code  = code.code
+        self.text_shown = code.description
+
+
+class PhoneNumber(db.Model):
+    """
+    Telephone numbers
+    """
+
+    TYPES = (
+        "MOBILE",
+        "HOME",
+        "WORK",
+    )
+
+    person_id = db.Column(db.String(10), db.ForeignKey('person.id'), primary_key=True)
+    type_code = db.Column(db.String(10), primary_key=True)
+    number    = db.Column(db.String(13), unique=True)
+    sms       = db.Column(db.Boolean, nullable=False)
+
+    def __init__(self, person, number, type_code):
+        self.person = person
+        self.type   = type_code
+        self.number = number
+
+    @property
+    def type(self):
+        return self.type_code.lower()
+
+    @type.setter
+    def type(self, code):
+        if code not in self.TYPES:
+            raise InvalidValueError('phone_number.type', 'invalid type code')
+
+        self.type_code = code.upper()
+
 
 class VerifyToken(db.Model):
     token = db.Column(db.String(300), primary_key=True)

@@ -2,14 +2,13 @@ from hub.tests import client, db
 
 def test_create_customer_service(client, db):
 
-    from hub.models.membership import Person, Address
+    from hub.models.membership import Person
     from hub.services.payments import create_customer
 
     person = Person('anne', 'Person')
-    addr = Address(person, 'EMAIL', 'PRIMARY', 'success@simulator.amazonses.com')
+    person.primary_address = 'success@simulator.amazonses.com'
+    
     db.session.add(person)
-    db.session.add(addr)
-
     db.session.commit()
 
     customer = create_customer(person)
@@ -20,15 +19,14 @@ def test_create_customer_service(client, db):
 
 def test_create_payment_intent_service(client, db):
 
-    from hub.models.membership import Person, Address
+    from hub.models.membership import Person
     from hub.models.finance import Payment
     from hub.services.payments import create_customer, generate_payment
 
-    person = Person('anneother', 'Person')
-    addr = Address(person, 'EMAIL', 'PRIMARY', 'success@simulator.amazonses.com')
+    person = Person('anne', 'Person')
+    person.primary_address = 'success@simulator.amazonses.com'
+    
     db.session.add(person)
-    db.session.add(addr)
-
     db.session.commit()
 
     customer        = create_customer(person)
