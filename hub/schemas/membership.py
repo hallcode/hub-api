@@ -1,10 +1,11 @@
 from hub.exts import ma
-from hub.models.membership import Person
+from hub.models.membership import Person, Address
 from hub.models.finance import Payment
 
 class PersonSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Person
+        include_relationships = True
         exclude = (
             "ward_id",
             "constituency_id",
@@ -28,3 +29,13 @@ class PersonSchema(ma.SQLAlchemyAutoSchema):
     full_name = ma.Str(dump_only=True)
     email = ma.Email(attribute="primary_email")
     password = ma.Str(load_only=True)
+
+
+class AddressSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = Address
+        exclude = (
+            'type_code',
+        )
+
+    type = ma.Str()
