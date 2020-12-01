@@ -68,7 +68,7 @@ def handle_errors(app):
             "error": "[400] There was an error with the supplied values.",
             "fields": e.__dict__["messages"]
         }
-        return json.dumps(value), 400
+        return value, 400
 
     app.register_error_handler(Error, handle_generic_error)
     app.register_error_handler(ValidationError, handle_validation_error)
