@@ -17,6 +17,7 @@ docs/_build/
 .vscode
 http.ini
 *.db
+uwsgi.ini
 
 # Coverage reports
 htmlcov/

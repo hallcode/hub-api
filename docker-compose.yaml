@@ -1,0 +1,16 @@
+version: "0.1"
+services:
+  web:
+    build: .
+    ports:
+      - "8081:80"
+    volumes:
+      - "./hub:/var/hub/hub"
+    env_file:
+      - "./.env"
+  data:
+    image: "postgres:alpine"
+    restart: always
+      environment:
+        POSTGRES_PASSWORD: www
+        POSTGRES_DB: hub

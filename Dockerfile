@@ -1,18 +1,24 @@
-FROM tiangolo/uwsgi-nginx-flask:python3.8
+FROM python:3-alpine
 
-MAINTAINER Alex Hall "alexhall93@me.com"
+LABEL maintainer="alexhall93@me.com"
 
-ENV NGINX_MAX_UPLOAD 64m
+EXPOSE 8081
+RUN mkdir -p /var/app
+WORKDIR /hub
 
-WORKDIR /var/www
-
-ENV UWSGI_INI uwsgi.ini
+RUN set -e; \
+	apk add --no-cache --virtual .build-deps uwsgi-python3;
 
 COPY ./requirements.txt requirements.txt
-COPY ./uwsgi.ini uwsgi.ini
-COPY ./migrations /migrations
 
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+RUN apk del .build-deps;
+
+COPY ./uwsgi.ini uwsgi.ini
+
 RUN mkdir spoolfiles
+
+ENTRYPOINT ["uwsgi", "--ini=uwsgi.ini"]
 
 
