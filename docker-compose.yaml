@@ -1,16 +1,26 @@
-version: "0.1"
+version: "3.8"
+
 services:
-  web:
+
+  hub:
+    container_name: "hub-api"
     build: .
+    depends_on:
+      - data
     ports:
       - "8081:80"
     volumes:
-      - "./hub:/var/hub/hub"
+      - "./hub:/usr/src/hub"
     env_file:
       - "./.env"
+
   data:
     image: "postgres:alpine"
-    restart: always
-      environment:
-        POSTGRES_PASSWORD: www
-        POSTGRES_DB: hub
+    restart: on-failure
+    environment:
+      POSTGRES_PASSWORD: www
+      POSTGRES_DB: hub
+    ports:
+      - "8082:5432"
+    expose:
+      - 8082
